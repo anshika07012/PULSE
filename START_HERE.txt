@@ -1,0 +1,7 @@
+PULSE - how to run (VS Code terminal, inside the "pulse" folder)
+
+  npm run install:all
+  npm run dev
+
+Then open http://localhost:5173
+Logins (password demo123): patient@pulse.demo  /  doctor@pulse.demo

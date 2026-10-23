@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Doctor with stethoscope in a hospital corridor">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e3f4ef"/><stop offset="1" stop-color="#9fd3c6"/></linearGradient>
+    <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9e4dd"/><stop offset="1" stop-color="#a6cfc5"/></linearGradient>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg)"/>
+  <rect y="470" width="800" height="130" fill="url(#floor)"/>
+  <!-- windows -->
+  <g fill="#f6fcfa" stroke="#bfe0d8" stroke-width="4">
+    <rect x="60" y="70" width="150" height="230" rx="8"/><rect x="590" y="70" width="150" height="230" rx="8"/>
+  </g>
+  <g stroke="#bfe0d8" stroke-width="3"><path d="M135 70v230M60 185h150M665 70v230M590 185h150"/></g>
+  <!-- wall cross -->
+  <g transform="translate(400 120)"><rect x="-14" y="-40" width="28" height="80" rx="5" fill="#e53935" opacity=".85"/><rect x="-40" y="-14" width="80" height="28" rx="5" fill="#287a51" opacity=".85"/></g>
+  <!-- handrail -->
+  <rect x="0" y="420" width="800" height="10" fill="#fff" opacity=".7"/>
+  <!-- doctor -->
+  <path d="M225 600C225 470 295 405 400 405s175 65 175 195z" fill="#ffffff"/>
+  <path d="M225 600C225 470 295 405 400 405" fill="none" stroke="#dbe8e4" stroke-width="3"/>
+  <path d="M358 407l42 82 42-82z" fill="#2a9d8f"/>
+  <path d="M400 489v111" stroke="#dbe8e4" stroke-width="3"/>
+  <rect x="380" y="352" width="40" height="58" rx="16" fill="#d9a07b"/>
+  <ellipse cx="400" cy="298" rx="54" ry="64" fill="#e8b48f"/>
+  <path d="M344 296c-6-62 106-62 112 0-16-34-96-34-112 0z" fill="#2b2320"/>
+  <circle cx="378" cy="304" r="5" fill="#2b2320"/><circle cx="422" cy="304" r="5" fill="#2b2320"/>
+  <path d="M382 336q18 16 36 0" stroke="#9a5b45" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- stethoscope -->
+  <path d="M364 408c-18 66 6 118 52 118" fill="none" stroke="#2f3b3a" stroke-width="6" stroke-linecap="round"/>
+  <path d="M436 408c14 36 8 70-20 118" fill="none" stroke="#2f3b3a" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="416" cy="530" r="14" fill="#9fb8b3" stroke="#2f3b3a" stroke-width="5"/>
+  <!-- badge + pocket -->
+  <rect x="470" y="470" width="52" height="30" rx="5" fill="#f1f6f4" stroke="#cfe0db"/><rect x="478" y="479" width="30" height="5" rx="2" fill="#287a51"/><rect x="478" y="489" width="20" height="4" rx="2" fill="#aab9b5"/>
+  <rect x="285" y="480" width="8" height="46" rx="3" fill="#e53935"/><rect x="298" y="486" width="8" height="40" rx="3" fill="#287a51"/>
+</svg>
