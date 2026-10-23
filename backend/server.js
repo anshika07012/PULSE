@@ -30,8 +30,20 @@ app.use((err, _req, res, _next) => {
   res.status(500).json({ message: 'Something went wrong on the server. Please try again.' });
 });
 
+export { app };
+
 const PORT = process.env.PORT || 5050;
 
+if (process.argv[1]?.endsWith('server.js')) {
+  connectDB()
+  .then(seedIfEmpty)
+  .then(() => app.listen(PORT, () => console.log(`PULSE API running at http://localhost:${PORT}`)))
+  .catch((err) => {
+    console.error('Failed to start:', err);
+    process.exit(1);
+  });
+}
+/*
 connectDB()
   .then(seedIfEmpty)
   .then(() => app.listen(PORT, () => console.log(`PULSE API running at http://localhost:${PORT}`)))
@@ -39,3 +51,4 @@ connectDB()
     console.error('Failed to start:', err);
     process.exit(1);
   });
+*/

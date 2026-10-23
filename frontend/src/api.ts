@@ -65,7 +65,9 @@ export const api = {
     request<{ token: string; user: User }>("/auth/register", { method: "POST", body }),
 
   meta: () => request<Meta>("/queue/meta"),
-  queue: () => request<QueueResponse>("/queue"),
+  queue: (department?: string) => request<QueueResponse>(
+    `/queue${department ? `?department=${encodeURIComponent(department)}` : ""}`
+  ),
   bookToken: (body: { department: string; doctor: string; reason?: string; priority?: string; patientName?: string }) =>
     request<QueueResponse & { token: Token }>("/queue", { method: "POST", body }),
   callNext: () => request<QueueResponse>("/queue/call-next", { method: "POST" }),

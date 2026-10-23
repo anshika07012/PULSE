@@ -28,16 +28,29 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
   const [view, setView] = useState<View>("overview");
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [meta, setMeta] = useState<Meta | null>(null);
+  const [queueDepartment, setQueueDepartment] = useState(user.department ?? "");
   const now = useNow(1000);
 
-  const queue = usePolling(api.queue, 4000);
+  const queue = usePolling(
+    () => queueDepartment
+      ? api.queue(queueDepartment)
+      : Promise.resolve({ tokens: [], stats: { waiting: 0, inConsultation: 0, completedToday: 0, avgWaitMin: 0 } }),
+    4000
+  );
   const pharmacy = usePolling(() => api.pharmacy(), 8000);
   const beds = usePolling(api.beds, 6000);
   const analytics = usePolling(api.analytics, 10000);
 
   useEffect(() => {
-    api.meta().then(setMeta).catch(() => undefined);
-  }, []);
+    api.meta().then((nextMeta) => {
+      setMeta(nextMeta);
+      if (!queueDepartment && nextMeta.departments[0]) setQueueDepartment(nextMeta.departments[0].name);
+    }).catch(() => undefined);
+  }, [queueDepartment]);
+
+  useEffect(() => {
+    if (queueDepartment) queue.reload();
+  }, [queueDepartment, queue.reload]);
 
   const notify: Notify = useCallback((message: string, tone: "ok" | "error" = "ok") => {
     const id = Date.now() + Math.random();
@@ -68,7 +81,7 @@ export default function Dashboard({ user, onLogout }: { user: User; onLogout: ()
   ];
 
   const modules = {
-    queue: <QueueTracker data={queue.data} meta={meta} user={user} notify={notify} reload={reloadQueue} compact={view === "overview"} />,
+    queue: <QueueTracker data={queue.data} meta={meta} user={user} notify={notify} reload={reloadQueue} onDepartmentChange={setQueueDepartment} compact={view === "overview"} />,
     pharmacy: <PharmacyInventory data={pharmacy.data} user={user} notify={notify} reload={pharmacy.reload} compact={view === "overview"} />,
     beds: <BedMatrix data={beds.data} user={user} notify={notify} reload={beds.reload} compact={view === "overview"} onOpen={() => setView("beds")} />,
     analytics: <Analytics data={analytics.data} />,

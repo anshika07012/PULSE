@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { api } from "../../api";
 import { useNow } from "../../hooks/usePolling";
 import type { Meta, Notify, QueueResponse, Token, User } from "../../types";
@@ -10,12 +10,13 @@ interface Props {
   user: User;
   notify: Notify;
   reload: () => Promise<void>;
+  onDepartmentChange: (department: string) => void;
   compact?: boolean;
 }
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong.");
 
-export default function QueueTracker({ data, meta, user, notify, reload, compact }: Props) {
+export default function QueueTracker({ data, meta, user, notify, reload, onDepartmentChange, compact }: Props) {
   const now = useNow();
   const isDoctor = user.role === "doctor";
   const [booking, setBooking] = useState(false);
@@ -29,15 +30,20 @@ export default function QueueTracker({ data, meta, user, notify, reload, compact
   const [urgent, setUrgent] = useState(false);
 
   const departments = meta?.departments ?? [];
-  const chosenDept = dept || departments[0]?.name || "";
+  const selectableDepartments = isDoctor
+    ? departments.filter((department) => department.name === user.department)
+    : departments;
+  const chosenDept = (isDoctor ? user.department : dept) || selectableDepartments[0]?.name || "";
   const docsForDept = (meta?.doctors ?? []).filter((d) => d.department === chosenDept);
   const chosenDoc = docsForDept.some((d) => d.name === doc) ? doc : docsForDept[0]?.name ?? "";
 
+  useEffect(() => {
+    if (chosenDept) onDepartmentChange(chosenDept);
+  }, [chosenDept, onDepartmentChange]);
+
   const tokens = data?.tokens ?? [];
   const serving = tokens.filter((t) => t.status === "in-consultation");
-  const waiting = tokens
-    .filter((t) => t.status === "waiting")
-    .sort((a, b) => (a.priority === "urgent" ? 0 : 1) - (b.priority === "urgent" ? 0 : 1) || a.tokenNumber - b.tokenNumber);
+  const waiting = tokens.filter((t) => t.status === "waiting");
   const mine = tokens.find((t) => t.mine && (t.status === "waiting" || t.status === "in-consultation"));
   const stats = data?.stats;
 
@@ -125,8 +131,8 @@ export default function QueueTracker({ data, meta, user, notify, reload, compact
           )}
           <label>
             Department
-            <select value={chosenDept} onChange={(e) => setDept(e.target.value)}>
-              {departments.map((d) => (
+            <select value={chosenDept} onChange={(e) => setDept(e.target.value)} disabled={isDoctor}>
+              {selectableDepartments.map((d) => (
                 <option key={d.name}>{d.name}</option>
               ))}
             </select>

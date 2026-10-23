@@ -47,12 +47,14 @@ Otherwise data is stored in `backend/.data` and survives restarts.
 
 ## 3. Demo logins (password `demo123`)
 
-| Portal  | Email               |
-|---------|---------------------|
-| Patient | patient@pulse.demo  |
-| Doctor  | doctor@pulse.demo   |
+| Role | Department | Email |
+|---|---|---|
+| Patient | - | patient@pulse.demo |
+| Doctor | Cardiology | doctor@pulse.demo |
+| Doctor | Cardiology | cardiology.demo@pulse.local |
+| Doctor | General Medicine | medicine.doctor@pulse.local |
 
-You can also register new patient or doctor accounts. Doctors need a department and a licence ID.
+These accounts are seeded only in local zero-configuration mode. Keep real credentials in `backend/.env`; never commit secrets. Doctors can only view and manage queue operations for their assigned department.
 
 ## 4. What each role can do
 
@@ -74,7 +76,7 @@ All routes except auth need `Authorization: Bearer <token>`.
 | POST | /api/auth/register | `{name,email,password,role,phone?,department?,licenseId?}` |
 | POST | /api/auth/login | `{email,password,role}`; wrong portal returns 403 |
 | GET | /api/auth/me | current user |
-| GET | /api/queue | live tokens, positions, estimated waits, stats |
+| GET | /api/queue?department=Cardiology | live department/session tokens, positions, waits, stats (doctors use their assigned department) |
 | GET | /api/queue/meta | departments and doctors |
 | POST | /api/queue | book a token `{department,doctor,reason?,patientName?,priority?}` |
 | POST | /api/queue/call-next | doctor: finish current, call next |

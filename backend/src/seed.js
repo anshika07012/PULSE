@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import User from './models/User.js';
 import QueueToken from './models/QueueToken.js';
+import QueueCounter from './models/QueueCounter.js';
 import Medicine from './models/Medicine.js';
 import Bed from './models/Bed.js';
 import { DEPARTMENTS } from './config/constants.js';
@@ -16,6 +17,8 @@ async function seedUsers() {
   await User.create([
     { name: 'Riya Sharma', email: 'patient@pulse.demo', passwordHash, role: 'patient', phone: '9876543210' },
     { name: 'Dr. Aisha Verma', email: 'doctor@pulse.demo', passwordHash, role: 'doctor', department: 'Cardiology', licenseId: 'MCI-204518' },
+    { name: 'Dr. Aarav Patel', email: 'cardiology.demo@pulse.local', passwordHash, role: 'doctor', department: 'Cardiology', licenseId: 'MCI-204519' },
+    { name: 'Dr. Neha Kapoor', email: 'medicine.doctor@pulse.local', passwordHash, role: 'doctor', department: 'General Medicine', licenseId: 'MCI-204520' },
   ]);
 }
 
@@ -23,34 +26,42 @@ async function seedQueue() {
   if (await QueueToken.countDocuments()) return;
   const d = (name) => DEPARTMENTS.find((x) => x.name === name).consultMinutes;
   const rows = [
-    // already completed today
-    [38, 'Manoj Kumar', 'General Medicine', 'Dr. Rahul Khanna', 'completed', 'normal', 70, 52],
-    [39, 'Sunita Devi', 'Pediatrics', 'Dr. Meera Nair', 'completed', 'normal', 62, 48],
-    [40, 'Arjun Bhatia', 'Orthopedics', 'Dr. Sanjay Gupta', 'completed', 'normal', 55, 38],
-    [41, 'Fatima Begum', 'Cardiology', 'Dr. Aisha Verma', 'completed', 'urgent', 40, 22],
-    // being seen right now
-    [42, 'Ramesh Chandra', 'Cardiology', 'Dr. Aisha Verma', 'in-consultation', 'normal', 25, 5],
-    // waiting
-    [43, 'Priya Singh', 'Cardiology', 'Dr. Aisha Verma', 'waiting', 'normal', 22],
-    [44, 'Amit Tiwari', 'General Medicine', 'Dr. Rahul Khanna', 'waiting', 'normal', 20],
-    [45, 'Sana Khan', 'Pediatrics', 'Dr. Meera Nair', 'waiting', 'normal', 17],
-    [46, 'Deepak Yadav', 'Orthopedics', 'Dr. Sanjay Gupta', 'waiting', 'normal', 14],
-    [47, 'Anjali Mishra', 'Cardiology', 'Dr. Aisha Verma', 'waiting', 'urgent', 11],
-    [48, 'Vivek Pandey', 'Neurology', 'Dr. Vikram Rao', 'waiting', 'normal', 9],
-    [49, 'Kavya Joshi', 'General Medicine', 'Dr. Neha Kapoor', 'waiting', 'normal', 6],
-    [50, 'Imran Ali', 'Gynecology', 'Dr. Farah Siddiqui', 'waiting', 'normal', 3],
+    // each department starts at token 1 and continues independently
+    [1, 'Manoj Kumar', 'General Medicine', 'Dr. Rahul Khanna', 'completed', 'normal', 70, 52],
+    [2, 'Sunita Devi', 'Pediatrics', 'Dr. Meera Nair', 'completed', 'normal', 62, 48],
+    [3, 'Arjun Bhatia', 'Orthopedics', 'Dr. Sanjay Gupta', 'completed', 'normal', 55, 38],
+    [1, 'Fatima Begum', 'Cardiology', 'Dr. Aisha Verma', 'completed', 'urgent', 40, 22],
+    [2, 'Ramesh Chandra', 'Cardiology', 'Dr. Aisha Verma', 'in-consultation', 'normal', 25, 5],
+    [3, 'Priya Singh', 'Cardiology', 'Dr. Aisha Verma', 'waiting', 'normal', 22],
+    [2, 'Amit Tiwari', 'General Medicine', 'Dr. Rahul Khanna', 'waiting', 'normal', 20],
+    [1, 'Sana Khan', 'Pediatrics', 'Dr. Meera Nair', 'waiting', 'normal', 17],
+    [2, 'Deepak Yadav', 'Orthopedics', 'Dr. Sanjay Gupta', 'waiting', 'normal', 14],
+    [4, 'Anjali Mishra', 'Cardiology', 'Dr. Aisha Verma', 'waiting', 'urgent', 11],
+    [1, 'Vivek Pandey', 'Neurology', 'Dr. Vikram Rao', 'waiting', 'normal', 9],
+    [3, 'Kavya Joshi', 'General Medicine', 'Dr. Neha Kapoor', 'waiting', 'normal', 6],
+    [1, 'Imran Ali', 'Gynecology', 'Dr. Farah Siddiqui', 'waiting', 'normal', 3],
   ];
   const reasons = ['Chest discomfort', 'Fever and cough', 'Fever for 3 days', 'Knee pain', 'Follow-up visit', 'Migraine', 'Routine check-up'];
+  const sessionKey = new Date().toISOString().slice(0, 10);
   for (const [i, r] of rows.entries()) {
     const [tokenNumber, patientName, department, doctor, status, priority, createdMin, startedMin] = r;
     await QueueToken.create({
-      tokenNumber, patientName, department, doctor, status, priority,
+      tokenNumber, sessionKey, patientName, department, doctor, status, priority,
       reason: reasons[i % reasons.length],
       consultMinutes: d(department),
       createdAt: mins(createdMin),
       startedAt: startedMin !== undefined ? mins(startedMin) : undefined,
       completedAt: status === 'completed' ? mins(startedMin - 6) : undefined,
     });
+  }
+
+  for (const department of [...new Set(rows.map((row) => row[2]))]) {
+    const numbers = rows.filter((row) => row[2] === department).map((row) => row[0]);
+    await QueueCounter.findOneAndUpdate(
+      { department, sessionKey },
+      { $set: { lastTokenNumber: Math.max(...numbers) } },
+      { upsert: true }
+    );
   }
 }
 
@@ -108,5 +119,5 @@ export async function seedIfEmpty() {
   await seedQueue();
   await seedPharmacy();
   await seedBeds();
-  console.log('Seed data ready. Demo logins: patient@pulse.demo / doctor@pulse.demo (password: demo123)');
+  console.log('Seed data ready. Demo accounts are documented in README.md.');
 }
